@@ -4,13 +4,7 @@ This guide provides step-by-step instructions for configuring Google Cloud Platf
 
 ## Overview
 
-When Grafana is protected by IAP, all requests must be authenticated with a valid IAP identity token. This guide covers:
-
-1. Creating a service account for IAP access
-2. Configuring IAM roles and permissions
-3. Setting up OAuth client configuration
-4. Configuring IAP access control policies
-5. Testing the setup
+When Grafana is protected by IAP, all requests must be authenticated with a valid IAP identity token. This guide covers the setup process and configuration.
 
 ## Prerequisites
 
@@ -19,9 +13,11 @@ When Grafana is protected by IAP, all requests must be authenticated with a vali
 - Access to the GCP project containing the IAP-protected Grafana instance
 - Permission to create service accounts and assign IAM roles
 
-## Step 1: Create a Service Account
+## Setup Steps
 
-Create a service account that will be used to access the IAP-protected Grafana instance:
+### Step 1: Create a Service Account
+
+Create a service account for IAP access:
 
 ```bash
 # Set your project ID
@@ -35,7 +31,7 @@ gcloud iam service-accounts create ${SERVICE_ACCOUNT_NAME} \
     --project=${PROJECT_ID}
 ```
 
-## Step 2: Grant IAP Access Permission
+### Step 2: Grant IAP Access Permission
 
 Grant the service account permission to access IAP-protected resources:
 
@@ -48,7 +44,7 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 
 **Note:** Replace `${PROJECT_ID}` with your actual project ID. The project should be the one where IAP is configured for your Grafana instance.
 
-## Step 3: Grant Service Account Token Creator Permission
+### Step 3: Grant Service Account Token Creator Permission
 
 Grant users (or another service account) permission to impersonate the service account and generate identity tokens:
 
@@ -131,10 +127,16 @@ This approach automatically refreshes tokens before expiration:
 {
   "mcpServers": {
     "grafana": {
-      "command": "mcp-grafana",
+      "command": "/path/to/mcp-grafana",
       "args": [],
       "env": {
         "GRAFANA_URL": "https://your-grafana-instance.com",
+        "GRAFANA_IAP_TOKEN_COMMAND": "gcloud auth print-identity-token --impersonate-service-account=grafana-iap@your-project-id.iam.gserviceaccount.com --audiences=123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com --include-email",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "glsa_your-service-account-token-here" // only required if you are modifying resources
+      }
+    }
+  }
+}
 ```
 
 ### Option B: Using Static Token
